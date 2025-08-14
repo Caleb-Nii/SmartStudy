@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartStudy| Sign Up</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/jpeg" href="images/icon.jpeg">
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-dark: #1D4ED8;
+            --primary-light: #EFF6FF;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --light: #F8FAFC;
+            --dark: #1E293B;
+            --text: #334155;
+            --gray: #94A3B8;
+            --error: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            padding: 3rem 0;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 450px;
+            padding: 2.5rem;
+            margin: 0 auto;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header h1 {
+            font-size: 2rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-header p {
+            color: var(--gray);
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .password-input {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            color: var(--gray);
+            cursor: pointer;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--gray);
+        }
+
+        .auth-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .name-fields {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .name-fields .form-group {
+            flex: 1;
+        }
+
+        .user-type {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-type-option {
+            flex: 1;
+            text-align: center;
+        }
+
+        .user-type-option input {
+            display: none;
+        }
+
+        .user-type-option label {
+            display: block;
+            padding: 0.75rem;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-type-option input:checked + label {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 2rem 0;
+            margin-top: auto;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .auth-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .auth-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .name-fields {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 1.5rem 1rem;
+                box-shadow: none;
+                border: 1px solid #E2E8F0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <img src="images/logo.jpeg" alt="SmartStudy">
+                    <span>SmartStudy</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Create Account</h1>
+                    <p>Join SmartStudy to access learning resources</p>
+                </div>
+
+                <form class="auth-form" id="signupForm">
+                    <div class="name-fields">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" class="form-control" placeholder="Enter first name" required>
+                            <div class="error-message" id="firstNameError">Please enter your first name</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" class="form-control" placeholder="Enter last name" required>
+                            <div class="error-message" id="lastNameError">Please enter your last name</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+                        <div class="error-message" id="emailError">Please enter a valid email address</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-input">
+                            <input type="password" id="password" class="form-control" placeholder="Create a password (min 8 characters)" required>
+                            <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                        </div>
+                        <div class="error-message" id="passwordError">Password must be at least 8 characters</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <div class="password-input">
+                            <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm your password" required>
+                            <i class="fas fa-eye password-toggle" id="toggleConfirmPassword"></i>
+                        </div>
+                        <div class="error-message" id="confirmPasswordError">Passwords do not match</div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="user-type">
+                            <div class="user-type-option">
+                                <input type="radio" id="student" name="userType" value="student" checked>
+                                <label for="student">Student</label>
+                            </div>
+                            <div class="user-type-option">
+                                <input type="radio" id="lecturer" name="userType" value="lecturer">
+                                <label for="lecturer">Lecturer</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Create Account</button>
+                    </div>
+
+                    <div class="auth-footer">
+                        <p>Already have an account? <a href="login.html">Sign in</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 EduPlus GH. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFFSYgMgtIj2AA7723Uupy46FgoFW18RA",
+            authDomain: "eduplus-7c199.firebaseapp.com",
+            projectId: "eduplus-7c199",
+            storageBucket: "eduplus-7c199.firebasestorage.app",
+            messagingSenderId: "205643481101",
+            appId: "1:205643481101:web:1a6b308c7695f10f1f5544"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Password visibility toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        toggleConfirmPassword.addEventListener('click', function() {
+            const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            confirmPasswordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Form validation and submission
+        const signupForm = document.getElementById('signupForm');
+        
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form elements
+            const firstNameInput = document.getElementById('firstName');
+            const lastNameInput = document.getElementById('lastName');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const userType = document.querySelector('input[name="userType"]:checked').value;
+            
+            // Validate form
+            let isValid = true;
+            
+            // First name validation
+            if (!firstNameInput.value.trim()) {
+                document.getElementById('firstNameError').style.display = 'block';
+                firstNameInput.classList.add('error');
+                isValid = false;
+            }
+            
+            // Last name validation
+            if (!lastNameInput.value.trim()) {
+                document.getElementById('lastNameError').style.display = 'block';
+                lastNameInput.classList.add('error');
+                isValid = false;
+            }
+            
+            // Email validation
+            if (!emailInput.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) {
+                document.getElementById('emailError').style.display = 'block';
+                emailInput.classList.add('error');
+                isValid = false;
+            }
+            
+            // Password validation
+            if (!passwordInput.value || passwordInput.value.length < 8) {
+                document.getElementById('passwordError').style.display = 'block';
+                passwordInput.classList.add('error');
+                isValid = false;
+            }
+            
+            // Confirm password validation
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                document.getElementById('confirmPasswordError').style.display = 'block';
+                confirmPasswordInput.classList.add('error');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+            
+            // Show loading state
+            const submitBtn = signupForm.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account';
+            submitBtn.disabled = true;
+            
+            // Create user with Firebase Authentication
+            auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
+                .then((userCredential) => {
+                    // User created successfully
+                    const user = userCredential.user;
+                    
+                    // Save additional user data to Firestore
+                    return db.collection('users').doc(user.uid).set({
+                        firstName: firstNameInput.value.trim(),
+                        lastName: lastNameInput.value.trim(),
+                        email: emailInput.value.trim(),
+                        userType: userType,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                })
+                .then(() => {
+                    // Redirect based on user type
+                    if (userType === 'student') {
+                        window.location.href = 'student-dashboard.html'; // Redirect students to dashboard
+                    } else {
+                        window.location.href = 'lecturer-dashboard.html'; // Redirect lecturers to dashboard
+                    }
+                })
+                .catch((error) => {
+                    // Handle errors
+                    submitBtn.innerHTML = 'Create Account';
+                    submitBtn.disabled = false;
+                    
+                    let errorMessage = error.message;
+                    
+                    // More specific error messages
+                    if (error.code === 'auth/email-already-in-use') {
+                        errorMessage = 'This email is already registered. Please sign in.';
+                    } else if (error.code === 'auth/weak-password') {
+                        errorMessage = 'Password should be at least 6 characters';
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = 'Please enter a valid email address';
+                    }
+                    
+                    // Show error to user
+                    alert(errorMessage);
+                    console.error('Error:', error);
+                });
+        });
+
+        // Input validation on blur
+        document.getElementById('firstName').addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                document.getElementById('firstNameError').style.display = 'block';
+                this.classList.add('error');
+            } else {
+                document.getElementById('firstNameError').style.display = 'none';
+                this.classList.remove('error');
+            }
+        });
+
+        document.getElementById('lastName').addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                document.getElementById('lastNameError').style.display = 'block';
+                this.classList.add('error');
+            } else {
+                document.getElementById('lastNameError').style.display = 'none';
+                this.classList.remove('error');
+            }
+        });
+
+        document.getElementById('email').addEventListener('blur', function() {
+            if (!this.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value)) {
+                document.getElementById('emailError').style.display = 'block';
+                this.classList.add('error');
+            } else {
+                document.getElementById('emailError').style.display = 'none';
+                this.classList.remove('error');
+            }
+        });
+
+        document.getElementById('password').addEventListener('blur', function() {
+            if (!this.value || this.value.length < 8) {
+                document.getElementById('passwordError').style.display = 'block';
+                this.classList.add('error');
+            } else {
+                document.getElementById('passwordError').style.display = 'none';
+                this.classList.remove('error');
+            }
+        });
+
+        document.getElementById('confirmPassword').addEventListener('blur', function() {
+            const password = document.getElementById('password').value;
+            if (password !== this.value) {
+                document.getElementById('confirmPasswordError').style.display = 'block';
+                this.classList.add('error');
+            } else {
+                document.getElementById('confirmPasswordError').style.display = 'none';
+                this.classList.remove('error');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartStudy| Course Notes</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/jpeg" href="images/icon.jpeg">
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-dark: #1D4ED8;
+            --primary-light: #EFF6FF;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --light: #F8FAFC;
+            --dark: #1E293B;
+            --text: #334155;
+            --gray: #94A3B8;
+            --error: #EF4444;
+            --success: #10B981;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: #F5F7FA;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #F1F5F9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-logo {
+            height: 40px;
+        }
+
+        .user-profile {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-light);
+            margin-bottom: 1rem;
+            background-color: #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+        }
+
+        .user-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .user-email {
+            font-size: 0.875rem;
+            color: var(--gray);
+        }
+
+        .sidebar-menu {
+            padding: 1.5rem 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-bottom: 0.25rem;
+        }
+
+        .menu-item:hover {
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .menu-item.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+
+        .menu-item i {
+            margin-right: 1rem;
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--error);
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--dark);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            margin-right: 0.75rem;
+            color: var(--primary);
+        }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--dark);
+            cursor: pointer;
+            z-index: 101;
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+        }
+
+        /* Overlay for mobile menu */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 99;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Course Cards */
+        .courses-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .course-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #E2E8F0;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .course-header {
+            padding: 1.5rem;
+            background-color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .course-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .course-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .course-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .course-card.active .course-arrow {
+            transform: rotate(180deg);
+        }
+
+        .notes-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .course-card.active .notes-container {
+            max-height: 2000px;
+        }
+
+        .note-item {
+            padding: 1.25rem;
+            border-top: 1px solid #F1F5F9;
+            transition: background-color 0.3s;
+        }
+
+        .note-item:hover {
+            background-color: #F8FAFC;
+        }
+
+        .note-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .note-description {
+            font-size: 0.875rem;
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .note-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .download-btn i {
+            margin-right: 0.5rem;
+        }
+
+        .file-info {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-left: 1rem;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--gray);
+        }
+
+        /* Subject-specific colors */
+        .math { background-color: #FEE2E2; color: #DC2626; }
+        .english { background-color: #DCFCE7; color: #16A34A; }
+        .science { background-color: #DBEAFE; color: #2563EB; }
+        .history { background-color: #FEF3C7; color: #D97706; }
+        .programming { background-color: #E9D5FF; color: #7C3AED; }
+        .physics { background-color: #CCFBF1; color: #0D9488; }
+        .chemistry { background-color: #FCE7F3; color: #EC4899; }
+        .biology { background-color: #D1FAE5; color: #059669; }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 75%;
+                max-width: 300px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1.5rem;
+                padding-top: 5rem;
+            }
+
+            .courses-container {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .mobile-menu-btn {
+                top: 1rem;
+                left: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 85%;
+            }
+
+            .course-header {
+                padding: 1rem;
+            }
+
+            .course-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.25rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+                padding-top: 4.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Blur Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="images/logo.jpeg" alt="SmartStudy" class="sidebar-logo">
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar" id="userAvatar">S</div>
+            <h3 class="user-name" id="userName">Loading...</h3>
+            <p class="user-email" id="userEmail">user@example.com</p>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="student-dashboard.html" class="menu-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="course-notes.html" class="menu-item active">
+                <i class="fas fa-book-open"></i>
+                <span>Course Notes</span>
+            </a>
+            <a href="quizzes.html" class="menu-item">
+                <i class="fas fa-question-circle"></i>
+                <span>Quizzes</span>
+            </a>
+            <a href="profile.html" class="menu-item">
+                <i class="fas fa-user"></i>
+                <span>My Profile</span>
+            </a>
+            
+            <div class="logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Log Out</span>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="header">
+            <h1 class="page-title">
+                <i class="fas fa-book-open"></i>
+                Course Notes
+            </h1>
+        </div>
+        
+        <!-- Courses Container -->
+        <div class="courses-container" id="coursesContainer">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFFSYgMgtIj2AA7723Uupy46FgoFW18RA",
+            authDomain: "eduplus-7c199.firebaseapp.com",
+            projectId: "eduplus-7c199",
+            storageBucket: "eduplus-7c199.firebasestorage.app",
+            messagingSenderId: "205643481101",
+            appId: "1:205643481101:web:1a6b308c7695f10f1f5544"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const overlay = document.getElementById('overlay');
+        const coursesContainer = document.getElementById('coursesContainer');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+
+        // Toggle mobile menu with overlay
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            
+            if (sidebar.classList.contains('open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        overlay.addEventListener('click', toggleMobileMenu);
+
+        // Close menu when clicking on a menu item (for mobile)
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
+        // Logout functionality
+        logoutBtn.addEventListener('click', function() {
+            // Show loading state
+            const originalContent = logoutBtn.innerHTML;
+            logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging Out';
+            
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch(error => {
+                console.error('Logout error:', error);
+                logoutBtn.innerHTML = originalContent;
+            });
+        });
+
+        // Load user data from Firebase
+        function loadUserData() {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // Get user document from Firestore
+                db.collection('users').doc(user.uid).get()
+                    .then(doc => {
+                        if (doc.exists) {
+                            const userData = doc.data();
+                            
+                            // Update user info
+                            const fullName = `${userData.firstName} ${userData.lastName}`;
+                            userName.textContent = fullName;
+                            userEmail.textContent = user.email;
+                            
+                            // Update avatar with initials
+                            const initials = userData.firstName.charAt(0) + userData.lastName.charAt(0);
+                            userAvatar.textContent = initials;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error getting user data:', error);
+                    });
+            } else {
+                // User not logged in, redirect to login
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Get subject icon
+        function getSubjectIcon(subject) {
+            const icons = {
+                'math': 'fas fa-square-root-alt',
+                'english': 'fas fa-language',
+                'science': 'fas fa-flask',
+                'history': 'fas fa-landmark',
+                'programming': 'fas fa-code',
+                'physics': 'fas fa-atom',
+                'chemistry': 'fas fa-vial',
+                'biology': 'fas fa-dna'
+            };
+            return icons[subject.toLowerCase()] || 'fas fa-book';
+        }
+
+        // Get subject color class
+        function getSubjectClass(subject) {
+            const classes = {
+                'math': 'math',
+                'english': 'english',
+                'science': 'science',
+                'history': 'history',
+                'programming': 'programming',
+                'physics': 'physics',
+                'chemistry': 'chemistry',
+                'biology': 'biology'
+            };
+            return classes[subject.toLowerCase()] || '';
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i]);
+        }
+
+        // Load course notes from Firestore
+        function loadCourseNotes() {
+            // Show loading state
+            coursesContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            `;
+
+            // Simulate loading from Firestore
+            setTimeout(() => {
+                // Mock data - in real app this would come from Firestore
+                const mockCourses = [
+                    {
+                        id: 'math101',
+                        title: 'Mathematics',
+                        subject: 'math',
+                        notes: [
+                            {
+                                id: 'note1',
+                                title: 'Algebra Basics',
+                                description: 'Introduction to algebraic expressions and equations',
+                                file: 'algebra_basics.pdf',
+                                fileSize: 2457612,
+                                uploaded: '2023-10-15'
+                            },
+                            {
+                                id: 'note2',
+                                title: 'Geometry Fundamentals',
+                                description: 'Understanding shapes, angles, and geometric proofs',
+                                file: 'geometry_fundamentals.pdf',
+                                fileSize: 1896543,
+                                uploaded: '2023-10-22'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'eng201',
+                        title: 'English Literature',
+                        subject: 'english',
+                        notes: [
+                            {
+                                id: 'note3',
+                                title: 'Shakespearean Sonnets',
+                                description: 'Analysis of selected sonnets by William Shakespeare',
+                                file: 'shakespeare_sonnets.pdf',
+                                fileSize: 1258291,
+                                uploaded: '2023-10-10'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'sci301',
+                        title: 'Science',
+                        subject: 'science',
+                        notes: [
+                            {
+                                id: 'note4',
+                                title: 'Physics: Newton\'s Laws',
+                                description: 'Detailed explanation of Newton\'s three laws of motion',
+                                file: 'newtons_laws.pdf',
+                                fileSize: 3145728,
+                                uploaded: '2023-10-18'
+                            },
+                            {
+                                id: 'note5',
+                                title: 'Chemistry: Periodic Table',
+                                description: 'Understanding elements and their periodic trends',
+                                file: 'periodic_table.pdf',
+                                fileSize: 2097152,
+                                uploaded: '2023-10-25'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'cs401',
+                        title: 'Programming',
+                        subject: 'programming',
+                        notes: [
+                            {
+                                id: 'note6',
+                                title: 'JavaScript Basics',
+                                description: 'Introduction to JavaScript programming language',
+                                file: 'javascript_basics.pdf',
+                                fileSize: 1572864,
+                                uploaded: '2023-10-20'
+                            },
+                            {
+                                id: 'note7',
+                                title: 'HTML & CSS',
+                                description: 'Fundamentals of web development with HTML and CSS',
+                                file: 'html_css.pdf',
+                                fileSize: 2621440,
+                                uploaded: '2023-10-12'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'phy501',
+                        title: 'Physics',
+                        subject: 'physics',
+                        notes: [
+                            {
+                                id: 'note8',
+                                title: 'Quantum Mechanics',
+                                description: 'Introduction to quantum theory and its principles',
+                                file: 'quantum_mechanics.pdf',
+                                fileSize: 3670016,
+                                uploaded: '2023-10-28'
+                            }
+                        ]
+                    }
+                ];
+
+                if (mockCourses.length === 0) {
+                    coursesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-book-open"></i>
+                            <h3>No Course Notes Available</h3>
+                            <p>Your course notes will appear here once uploaded</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Render courses
+                coursesContainer.innerHTML = '';
+                mockCourses.forEach(course => {
+                    const courseCard = document.createElement('div');
+                    courseCard.className = 'course-card';
+                    courseCard.innerHTML = `
+                        <div class="course-header">
+                            <div class="course-icon ${getSubjectClass(course.subject)}">
+                                <i class="${getSubjectIcon(course.subject)}"></i>
+                            </div>
+                            <div class="course-title">${course.title}</div>
+                            <div class="course-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="notes-container">
+                            ${course.notes.map(note => `
+                                <div class="note-item">
+                                    <h4 class="note-title">${note.title}</h4>
+                                    <p class="note-description">${note.description}</p>
+                                    <div class="note-actions">
+                                        <a href="#" class="download-btn" data-file="${note.file}">
+                                            <i class="fas fa-download"></i>
+                                            Download
+                                        </a>
+                                        <span class="file-info">
+                                            ${formatFileSize(note.fileSize)} • PDF
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                    // Toggle notes visibility
+                    const header = courseCard.querySelector('.course-header');
+                    header.addEventListener('click', () => {
+                        courseCard.classList.toggle('active');
+                    });
+                    
+                    // Handle downloads
+                    const downloadBtns = courseCard.querySelectorAll('.download-btn');
+                    downloadBtns.forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const file = btn.getAttribute('data-file');
+                            simulateDownload(btn, file);
+                        });
+                    });
+                    
+                    coursesContainer.appendChild(courseCard);
+                });
+            }, 1000);
+        }
+
+        // Simulate file download (replace with actual Firebase Storage download)
+        function simulateDownload(button, filename) {
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading';
+            button.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-check"></i> Downloaded';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.style.pointerEvents = 'auto';
+                }, 2000);
+            }, 1500);
+            
+            console.log(`Downloading file: ${filename}`);
+            // In real app: storage.ref(`notes/${filename}`).getDownloadURL()...
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    loadUserData();
+                    loadCourseNotes();
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
